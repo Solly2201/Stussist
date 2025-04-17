@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .container {
+        padding-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        max-width: 650px;
+        margin: auto;
+      }
+      main {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      main h2 {
+        font-size: 26px;
+        margin-bottom: 10px;
+      }
+      main hr {
+        width: 80%;
+        margin-top: 10px;
+        margin: auto;
+        border: none;
+        border-top: 2px solid #ccc;
+      }
+      .second-bar {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        background: #1579f2;
+        padding: 10px 0;
+      }
+      .second-bar a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .second-bar a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      let c = false; // Default: Not logged in
+      document.addEventListener("DOMContentLoaded", function () {
+        c = localStorage.getItem("loggedin") === "true"; // Get stored value
+        if (!c) {
+          window.location.href = "./login.html"; // Redirect if not logged in
+          }
+        });
+        // Logout function
+        function logout() {
+          c = false;
+          localStorage.removeItem("loggedin");
+          window.location.href = "./login.html";
+        }
+    </script>
+    <header>
+      <div class="logo">STUSSIST</div>
+      <nav>
+        <a href="login.html" onclick="logout()">Logout</a>
+        <img src="./user-icon.png" alt="User Icon" class="user-icon" />
+      </nav>
+    </header>
+    <div class="second-bar">
+      <a href="food/foodhome.html">Food Management</a>
+      <a href="expense/expensehome.html">Expense Management</a>
+      <a href="attendance/attendancehome.html">Attendance Management</a>
+    </div>
+    <main>
+      <h2>Welcome to Stussist!</h2>
+      <hr />
+      <p>Select a category from above to proceed.</p>
+      <br />
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>

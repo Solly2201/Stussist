@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="logo">STUSSIST</div>
+      <nav>
+        <a href="signup.html">SIGNUP</a>
+        <img src="user-icon.png" alt="User Icon" class="user-icon" />
+      </nav>
+    </header>
+
+    <div class="container">
+      <img src="sad-kid.png" alt="Sad Kid" class="illustration" />
+      <form class="login-form" autocomplete="off">
+        <label for="username">USERNAME</label>
+        <input type="text" id="username" placeholder="Enter Username" />
+        <span class="error-msg"></span>
+        <label for="password">PASSWORD</label>
+        <input type="password" id="password" placeholder="Enter Password" />
+        <span class="error-msg"></span>
+        <button type="submit" class="login-btn">LOGIN</button>
+        <p>
+          Don't have an account?
+          <a href="signup.html" style="color: red">Sign Up</a>
+        </p>
+      </form>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

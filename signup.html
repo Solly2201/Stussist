@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="logo">STUSSIST</div>
+      <nav>
+        <a href="login.html">LOGIN</a>
+        <img src="user-icon.png" alt="User Icon" class="user-icon" />
+      </nav>
+    </header>
+
+    <div class="container">
+      <img src="sad-kid.png" alt="Sad Kid" class="illustration" />
+      <form class="signup-form" method="post">
+        <label for="name">NAME</label>
+        <input type="text" id="name" placeholder="Enter Name" />
+        <span class="error-msg"></span>
+
+        <label for="username">USERNAME</label>
+        <input type="text" id="username" placeholder="Enter Username" />
+        <span class="error-msg"></span>
+
+        <label for="email">EMAIL</label>
+        <input type="email" id="email" placeholder="Enter Email" />
+        <span class="error-msg"></span>
+
+        <label for="password">PASSWORD</label>
+        <input type="password" id="password" placeholder="Enter Password" />
+        <span class="error-msg"></span>
+
+        <label for="confirm-password">CONFIRM PASSWORD</label>
+        <input
+          type="password"
+          id="confirm-password"
+          placeholder="Confirm Password"
+        />
+        <span class="error-msg"></span>
+
+        <p>
+          Already have an account?
+          <a href="index.html" style="color: red">Login</a>
+        </p>
+        <button type="submit" class="signup-btn">SIGN UP</button>
+      </form>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
