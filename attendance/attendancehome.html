@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      div a {
+        color: white;
+        text-decoration: none;
+      }
+      .second-bar {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        background: #1579f2;
+        padding: 10px 0;
+      }
+      .second-bar a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .second-bar a:hover {
+        text-decoration: underline;
+      }
+
+      main {
+        padding: 15px 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      main h2 {
+        font-size: 26px;
+        margin-bottom: 10px;
+      }
+      main hr {
+        width: 80%;
+        margin: auto;
+        margin-top: 10px;
+        border: none;
+        border-top: 2px solid #ccc;
+      }
+
+      .content-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 80px;
+        margin: 40px auto 0;
+        flex-wrap: wrap;
+        max-width: 900px;
+      }
+      .chart-section {
+        flex: 1;
+        min-width: 300px;
+        text-align: center;
+        margin-right: 20px;
+      }
+      .chart-section img {
+        max-width: 100%;
+        height: auto;
+      }
+      .month-expenses {
+        margin-top: 10px;
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+      }
+      .date-range-section {
+        width: 250px;
+        text-align: center;
+      }
+      .date-range-section img {
+        width: 60px;
+        height: 60px;
+      }
+      .date-range-section h3 {
+        margin-top: 10px;
+        font-size: 18px;
+      }
+      .content-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 60px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+      .header-title {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .sub-title {
+        font-size: 14px;
+        font-weight: normal;
+        margin-bottom: 3px;
+        color: white;
+      }
+    </style>
+    <script></script>
+  </head>
+  <body>
+    <script src="../auth.js"></script>
+    <header>
+      <div class="header-title">
+        <div class="sub-title">ATTENDANCE MANAGEMENT</div>
+        <div class="logo">
+          <a href="../index.html">STUSSIST</a>
+        </div>
+      </div>
+      <nav>
+        <a href="../login.html" onclick="logout()">Logout</a>
+        <img src="../user-icon.png" alt="User Icon" class="user-icon" />
+      </nav>
+    </header>
+
+    <div class="second-bar">
+      <a href="./attendancehome.html">HOME</a>
+      <a href="./subjects.html">SUBJECTS</a>
+      <a href="./record.html">LECTURES RECORD</a>
+    </div>
+
+    <main>
+      <h2>WELCOME TO ATTENDANCE MANAGEMENT</h2>
+      <hr />
+      <p>Select a section from above to manage your subjects and lectures.</p>
+      <br />
+      <div style="display: flex; justify-content: center; align-items: center">
+        <button
+          type="button"
+          class="back-btn"
+          onclick="window.location.href='../index.html'"
+          style="background: red"
+        >
+          Main Page
+        </button>
+      </div>
+    </main>
+    <script src="../script.js"></script>
+  </body>
+</html>

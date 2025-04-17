@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subjects</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      div a {
+        color: white;
+        text-decoration: none;
+      }
+      .second-bar {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        background: #1579f2;
+        padding: 10px 0;
+      }
+      .second-bar a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .second-bar a:hover {
+        text-decoration: underline;
+      }
+
+      .header-title {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .sub-title {
+        font-size: 14px;
+        font-weight: normal;
+        margin-bottom: 3px;
+        color: white;
+      }
+
+      main {
+        padding: 15px 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      main h2 {
+        font-size: 26px;
+        margin-bottom: 10px;
+      }
+      main hr {
+        width: 80%;
+        margin: auto;
+        margin-top: 10px;
+        border: none;
+        border-top: 2px solid #ccc;
+      }
+
+      form {
+        margin-top: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      input[type="text"] {
+        padding: 10px;
+        width: 250px;
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background: #2cc9c2;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #1fa5a0;
+      }
+
+      #subjectList {
+        width: 80%;
+        max-width: 600px;
+        margin-top: 20px;
+      }
+      .subject-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #f2f2f2;
+        margin-bottom: 10px;
+        border-radius: 4px;
+      }
+      .subject-item button {
+        background: #ff6384;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .subject-item button:hover {
+        background: #ff4d6a;
+      }
+
+      #toast {
+        visibility: hidden;
+        min-width: 250px;
+        margin-left: -125px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        bottom: 30px;
+        font-size: 16px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out, visibility 0.5s;
+      }
+      #toast.show {
+        visibility: visible;
+        opacity: 1;
+      }
+    </style>
+    <script>
+      // Retrieve currentUser from localStorage (default to "admin")
+      const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {
+        username: "admin",
+      };
+      const userId = currentUser.username;
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.className = "show";
+        setTimeout(() => {
+          toast.className = toast.className.replace("show", "");
+        }, 2000);
+      }
+
+      // Create a new subject
+      function createSubject(event) {
+        event.preventDefault();
+        const subjectName = document.getElementById("subjectName").value.trim();
+        if (!subjectName) {
+          showToast("Please enter a subject name.");
+          return;
+        }
+        // Send username and subjectName to the backend
+        fetch("http://localhost:3000/createSubject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, subjectName }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              showToast("Subject created successfully!");
+              document.getElementById("subjectForm").reset();
+              fetchSubjects();
+            } else {
+              showToast("Error: " + data.error);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            showToast("Server error.");
+          });
+      }
+
+      // Fetch subjects from the backend and display them in the list
+      function fetchSubjects() {
+        fetch(`http://localhost:3000/getSubjects?userId=${userId}`)
+          .then((res) => res.json())
+          .then((data) => {
+            const subjectList = document.getElementById("subjectList");
+            subjectList.innerHTML = "";
+            if (data.success) {
+              if (data.subjects.length === 0) {
+                subjectList.innerText = "No subjects available.";
+              } else {
+                data.subjects.forEach((sub) => {
+                  const item = document.createElement("div");
+                  item.className = "subject-item";
+                  item.innerHTML = `<span>${sub}</span>`;
+                  const deleteBtn = document.createElement("button");
+                  deleteBtn.innerText = "Delete";
+                  deleteBtn.onclick = () => deleteSubject(sub);
+                  item.appendChild(deleteBtn);
+                  subjectList.appendChild(item);
+                });
+              }
+            } else {
+              showToast("Failed to load subjects.");
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            showToast("Server error loading subjects.");
+          });
+      }
+
+      // Delete a subject
+      function deleteSubject(subjectName) {
+        if (
+          !confirm(
+            `Are you sure you want to delete the subject "${subjectName}"?`
+          )
+        )
+          return;
+        fetch(
+          `http://localhost:3000/deleteSubject?userId=${userId}&subjectName=${encodeURIComponent(
+            subjectName
+          )}`,
+          {
+            method: "DELETE",
+          }
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              showToast("Subject deleted successfully.");
+              fetchSubjects();
+            } else {
+              showToast("Error: " + data.error);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            showToast("Server error.");
+          });
+      }
+
+      window.onload = () => {
+        fetchSubjects();
+      };
+    </script>
+  </head>
+  <body>
+    <div id="toast"></div>
+    <script src="../auth.js"></script>
+    <header>
+      <div class="header-title">
+        <div class="sub-title">ATTENDANCE MANAGEMENT</div>
+        <div class="logo">
+          <a href="../index.html">STUSSIST</a>
+        </div>
+      </div>
+      <nav>
+        <a href="../login.html" onclick="logout()">Logout</a>
+        <img src="../user-icon.png" alt="User Icon" class="user-icon" />
+      </nav>
+    </header>
+
+    <div class="second-bar">
+      <a href="./attendancehome.html">HOME</a>
+      <a href="./subjects.html">SUBJECTS</a>
+      <a href="./record.html">LECTURES RECORD</a>
+    </div>
+
+    <main>
+      <h2>Manage Subjects</h2>
+      <hr />
+      <!-- Create a new subject -->
+      <form id="subjectForm" onsubmit="createSubject(event)">
+        <input type="text" id="subjectName" placeholder="Enter Subject Name" />
+        <button type="submit">Create Subject</button>
+      </form>
+      <!-- Container for list of subjects -->
+      <div id="subjectList" style="margin-top: 20px"></div>
+    </main>
+
+    <script src="../script.js"></script>
+  </body>
+</html>
