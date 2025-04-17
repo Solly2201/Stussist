@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Food Recommendation</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      main {
+        margin-top: 10px 20px;
+        text-align: center;
+      }
+      h2 {
+        font-size: 26px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+      .header-title {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .sub-title {
+        font-size: 14px;
+        font-weight: normal;
+        margin-bottom: 3px;
+        color: white;
+      }
+      .logo a {
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-decoration: none;
+      }
+      .search-bar {
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        padding: 5px 10px;
+        outline: none;
+        width: 300px;
+        text-align: center;
+      }
+      nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+      nav img.user-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+      }
+      .recommendation {
+        margin-top: 20px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .recommendation hr {
+        margin: 10px 0;
+      }
+      .recommendation p {
+        margin: 5px 0;
+        font-size: 16px;
+      }
+      div a {
+        color: white;
+        text-decoration: none;
+      }
+      .second-bar {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        background: #1579f2;
+        padding: 10px 0;
+      }
+      .second-bar a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .second-bar a:hover {
+        text-decoration: underline;
+      }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Retrieve recommendation data from localStorage
+        const storedData = localStorage.getItem("recommendedFood");
+        const foodNameSpan = document.getElementById("foodname");
+        const detailsDiv = document.getElementById("details");
+        if (storedData) {
+          const recommendation = JSON.parse(storedData);
+          if (recommendation.success) {
+            foodNameSpan.textContent = recommendation.data.item_name;
+            detailsDiv.innerHTML = `<hr>
+              <p><strong>Price:</strong> ₹${recommendation.data.price}</p>
+              <p><strong>Category:</strong> ${recommendation.data.cuisine}</p>
+              <p><strong>Calories:</strong> ${recommendation.data.calories} kcal</p>
+            `;
+          } else {
+            foodNameSpan.textContent = "";
+            detailsDiv.textContent = recommendation.message || "";
+          }
+        } else {
+          foodNameSpan.textContent = "No recommendation available.";
+          detailsDiv.textContent = "";
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <script src="../auth.js"></script>
+    <header>
+      <div class="header-title">
+        <div class="sub-title">FOOD MANAGEMENT</div>
+        <div class="logo">
+          <a href="../index.html">STUSSIST</a>
+        </div>
+      </div>
+      <input type="text" class="search-bar" placeholder="Search for food..." />
+      <nav>
+        <a href="../login.html" onclick="logout()">Logout</a>
+        <img src="../user-icon.png" alt="User Icon" class="user-icon" />
+      </nav>
+    </header>
+    <div class="second-bar">
+      <a href="foodhome.html">Home</a>
+      <a href="quicksearch.html">Quick Search</a>
+      <a href="suggestfood.html">Suggest Food</a>
+    </div>
+    <main>
+      <h2>Food Recommendation</h2>
+      <hr />
+      <div class="recommendation">
+        <p><strong>Food Suggestion:</strong> <span id="foodname">[ ]</span></p>
+        <div id="details"></div>
+      </div>
+      <form>
+        <button
+          type="button"
+          class="back-btn"
+          onclick="window.location.href='./suggestfood.html'"
+          style="margin-top: 20px"
+        >
+          Try Again
+        </button>
+      </form>
+    </main>
+    <script src="../script.js"></script>
+  </body>
+</html>
