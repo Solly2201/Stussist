@@ -83,7 +83,14 @@
           <a href="../index.html">STUSSIST</a>
         </div>
       </div>
-      <input type="text" class="search-bar" placeholder="Search for food..." />
+      <!-- Search bar redirects to quicksearch with query -->
+      <input
+        type="text"
+        id="foodSearch"
+        class="search-bar"
+        placeholder="Search for food..."
+        onkeypress="handleSearch(event)"
+      />
       <nav>
         <a href="../login.html" onclick="logout()">Logout</a>
         <img src="../user-icon.png" alt="User Icon" class="user-icon" />
@@ -97,7 +104,7 @@
     <main>
       <h2>WELCOME TO FOOD MANAGEMENT</h2>
       <hr />
-      <p>Select a section from above to proceed.</p>
+      <p>Select a section from above to proceed...</p>
       <br />
       <div style="display: flex; justify-content: center; align-items: center">
         <button
@@ -110,6 +117,18 @@
         </button>
       </div>
     </main>
+    <script>
+      // On Enter key, redirect to quicksearch with query param
+      function handleSearch(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const query = document.getElementById('foodSearch').value.trim();
+          if (query) {
+            window.location.href = `quicksearch.html?query=${encodeURIComponent(query)}`;
+          }
+        }
+      }
+    </script>
     <script src="../script.js"></script>
   </body>
 </html>
