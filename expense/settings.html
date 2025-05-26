@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>Settings</title>
     <link rel="stylesheet" href="../styles.css" />
     <style>
@@ -108,18 +111,38 @@
         color: white;
       }
     </style>
+
     <script>
-      // Load categories and display them in a list.
+      // 1) Ensure we have a userId in localStorage (default to "admin")
+      const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+      let userId;
+      if (storedUser && storedUser.username) {
+        userId = storedUser.username;
+      } else {
+        userId = "admin";
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify({ username: "admin" })
+        );
+        console.warn("No currentUser found; defaulting to admin");
+      }
+
+      // 2) Load categories and display them
       function loadCategories() {
-        fetch("http://localhost:3000/api/categories")
+        console.log("→ loadCategories() called; userId =", userId);
+        fetch(
+          `http://localhost:3000/api/categories?userId=${encodeURIComponent(
+            userId
+          )}`
+        )
           .then((response) => response.json())
           .then((categories) => {
+            console.log("← /api/categories returned:", categories);
             const list = document.getElementById("categoryList");
             list.innerHTML = "";
             categories.forEach((cat) => {
               const li = document.createElement("li");
               li.textContent = cat.name;
-              // delete button for each category.
               const btn = document.createElement("button");
               btn.textContent = "Delete";
               btn.className = "del-btn";
@@ -128,10 +151,13 @@
               list.appendChild(li);
             });
           })
-          .catch((error) => console.error("Error fetching categories:", error));
+          .catch((error) => {
+            console.error("❌ loadCategories error:", error);
+            alert("Failed to load categories.");
+          });
       }
 
-      // Add a new category.
+      // Add a new category
       async function addCategory(event) {
         event.preventDefault();
         const categoryName = document
@@ -141,42 +167,66 @@
           alert("Please enter a category name.");
           return;
         }
+        console.log(
+          "→ POST /api/categories, body =",
+          { userId, name: categoryName }
+        );
         try {
-          const response = await fetch("http://localhost:3000/api/categories", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: categoryName }),
-          });
+          const response = await fetch(
+            "http://localhost:3000/api/categories",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId, name: categoryName }),
+            }
+          );
+          const data = await response.json();
+          console.log("← POST /api/categories response:", data);
           if (response.ok) {
-            const result = await response.json();
             alert("Category added successfully!");
             document.getElementById("settingsForm").reset();
             loadCategories();
           } else {
-            alert("Error saving category.");
+            alert(
+              "Error saving category: " + (data.error || "Unknown error")
+            );
           }
         } catch (error) {
-          console.error("Error adding category:", error);
+          console.error("❌ addCategory error:", error);
           alert("An error occurred while saving category.");
         }
       }
 
-      // Delete a category.
+      // Delete a category
       async function deleteCategory(id) {
-        if (!confirm("Are you sure you want to delete this category?")) return;
+        if (!confirm("Are you sure you want to delete this category?"))
+          return;
+        console.log(
+          "→ DELETE /api/categories?userId=" +
+            userId +
+            "&categoryId=" +
+            id
+        );
         try {
           const response = await fetch(
-            "http://localhost:3000/api/categories/" + id,
+            `http://localhost:3000/api/categories?userId=${encodeURIComponent(
+              userId
+            )}&categoryId=${id}`,
             { method: "DELETE" }
           );
+          const data = await response.json();
+          console.log("← DELETE /api/categories response:", data);
           if (response.ok) {
             alert("Category deleted successfully.");
             loadCategories();
           } else {
-            alert("Failed to delete category.");
+            alert(
+              "Failed to delete category: " +
+                (data.error || "Unknown error")
+            );
           }
         } catch (error) {
-          console.error("Error deleting category:", error);
+          console.error("❌ deleteCategory error:", error);
           alert("Error deleting category.");
         }
       }
@@ -184,24 +234,33 @@
       window.onload = loadCategories;
     </script>
   </head>
+
   <body>
     <script src="../auth.js"></script>
     <header>
       <div class="header-title">
         <div class="sub-title">EXPENSE MANAGEMENT</div>
-        <div class="logo"><a href="../index.html">STUSSIST</a></div>
+        <div class="logo">
+          <a href="../index.html">STUSSIST</a>
+        </div>
       </div>
       <nav>
         <a href="../login.html" onclick="logout()">Logout</a>
-        <img src="../user-icon.png" alt="User Icon" class="user-icon" />
+        <img
+          src="../user-icon.png"
+          alt="User Icon"
+          class="user-icon"
+        />
       </nav>
     </header>
+
     <div class="second-bar">
       <a href="expensehome.html">HOME</a>
       <a href="addexpense.html">ADD EXPENSE</a>
       <a href="transactions.html">TRANSACTIONS</a>
       <a href="settings.html">SETTINGS</a>
     </div>
+
     <main>
       <h2>Settings</h2>
       <hr />
@@ -223,7 +282,7 @@
       <div class="category-list">
         <h3>Current Categories</h3>
         <ul id="categoryList">
-          <!-- Listing current Categories -->
+          <!-- Categories will be listed here -->
         </ul>
       </div>
     </main>
