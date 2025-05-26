@@ -154,7 +154,7 @@
           showToast("Please enter a subject name.");
           return;
         }
-        // Send username and subjectName to the backend
+        // Send userId and subjectName to the backend
         fetch("http://localhost:3000/createSubject", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
