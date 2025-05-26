@@ -97,37 +97,24 @@
       }
     </style>
     <script>
-      // Function to display the current month name.
-      function month() {
-        const d = new Date();
-        const monthNames = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
-        document.getElementById("month").innerHTML = monthNames[d.getMonth()];
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      const userId = stored.username || "";
+
+      function setMonthLabel(text) {
+        document.getElementById("month").innerText = text;
       }
 
-      // Fetch data and render the chart.
       function renderChart(startDate = "", endDate = "") {
-        let apiUrl = "http://localhost:3000/api/expenses";
+        let apiUrl = `http://localhost:3000/api/expenses?userId=${encodeURIComponent(userId)}`;
         if (startDate && endDate) {
-          apiUrl += `?start=${startDate}&end=${endDate}`;
+          apiUrl += `&start=${startDate}&end=${endDate}`;
         }
+
         fetch(apiUrl)
-          .then((response) => response.json())
+          .then((res) => res.json())
           .then((data) => {
             const labels = data.map((item) => item.description);
-            const amounts = data.map((item) => item.total);
+            const amounts = data.map((item) => item.amount);
             const backgroundColors = [
               "rgba(255, 99, 132, 0.6)",
               "rgba(54, 162, 235, 0.6)",
@@ -136,12 +123,12 @@
               "rgba(153, 102, 255, 0.6)",
               "rgba(255, 159, 64, 0.6)",
             ];
+
             if (window.expenseChartInstance) {
               window.expenseChartInstance.destroy();
             }
-            const ctx = document
-              .getElementById("expenseChart")
-              .getContext("2d");
+
+            const ctx = document.getElementById("expenseChart").getContext("2d");
             window.expenseChartInstance = new Chart(ctx, {
               type: "pie",
               data: {
@@ -164,35 +151,42 @@
           .catch((error) => console.error("Error rendering chart:", error));
       }
 
-      // Function to filter expenses based on the date range selected by the user.
       function filterExpenses() {
         const start = document.getElementById("startDate").value;
         const end = document.getElementById("endDate").value;
-        if (start && end) {
-          renderChart(start, end);
-          document.getElementById("month").innerHTML = start + " to " + end;
-        } else {
+        if (!start || !end) {
           alert("Please select both start and end dates.");
+          return;
         }
+        renderChart(start, end);
+        setMonthLabel(`${start} to ${end}`);
       }
 
-      // When the window loads, display current month name and calculate the current month's date range.
       window.onload = () => {
-        month();
         const now = new Date();
         const year = now.getFullYear();
         const monthIndex = now.getMonth();
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        const monthName = monthNames[monthIndex];
+        setMonthLabel(`${monthName} ${year}`);
 
-        // Calculate the first day of the current month.
         const firstDay = new Date(year, monthIndex, 1);
-        // Calculate the last day of the current month.
         const lastDay = new Date(year, monthIndex + 1, 0);
-
-        // Convert both dates to YYYY-MM-DD format.
         const startDate = firstDay.toISOString().split("T")[0];
         const endDate = lastDay.toISOString().split("T")[0];
-
-        // Fetch and render expenses for the current month.
         renderChart(startDate, endDate);
       };
     </script>
