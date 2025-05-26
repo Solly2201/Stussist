@@ -6,6 +6,12 @@
     <title>Quick Search</title>
     <link rel="stylesheet" href="../styles.css" />
     <style>
+      .logo a {
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-decoration: none;
+      }
       .container {
         padding-top: 50px;
         display: flex;
@@ -39,124 +45,60 @@
         text-align: center;
       }
       main {
-        margin-top: 10px 20px;
+        margin: 20px auto;
         text-align: center;
+        max-width: 600px;
       }
       main hr {
-        margin-top: 10px;
+        margin: 10px 0;
       }
       #food-name {
-        width: 200px;
+        width: 250px;
+        padding: 8px;
       }
-
-      h2 {
-        font-size: 26px;
-        font-weight: bold;
-        text-transform: uppercase;
-      }
-
-      label,
-      .slider,
-      .dropdown {
-        display: block;
-        margin: 10px auto;
-      }
-
-      .slider {
-        width: 20%;
-      }
-
-      .slider::-webkit-slider-thumb {
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        background: #3498db;
-        border-radius: 50%;
+      .submit-btn {
+        padding: 8px 16px;
+        background: #1579f2;
+        border: none;
+        color: white;
+        font-size: 16px;
         cursor: pointer;
+        border-radius: 4px;
       }
-
-      div a {
+      .results {
+        margin-top: 20px;
+        text-align: left;
+      }
+      .results table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .results th,
+      .results td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      .results th {
+        background: #1579f2;
         color: white;
-        text-decoration: none;
-      }
-
-      .tooltip {
-        position: absolute;
-        background: black;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        display: none;
-        pointer-events: none;
-        transform: translateX(-50%);
-        white-space: nowrap;
-      }
-
-      .tooltip::after {
-        content: "";
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 6px solid transparent;
-        border-right: 6px solid transparent;
-        border-top: 10px solid black;
       }
       .header-title {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
       }
-
       .sub-title {
         font-size: 14px;
         font-weight: normal;
         margin-bottom: 3px;
         color: white;
       }
+      input{
+        margin-top: 10px;
+      }
     </style>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const sliders = document.querySelectorAll(".slider");
-
-        sliders.forEach((slider) => {
-          let tooltip = document.createElement("span");
-          tooltip.classList.add("tooltip");
-          document.body.appendChild(tooltip);
-
-          slider.addEventListener("input", function () {
-            let sliderRect = this.getBoundingClientRect();
-            let thumbWidth = 20;
-            let thumbX =
-              sliderRect.left +
-              ((this.value - this.min) / (this.max - this.min)) *
-                sliderRect.width -
-              thumbWidth / 2;
-            tooltip.textContent = this.value;
-            tooltip.style.display = "block";
-            tooltip.style.left = `${thumbX}px`; // Center over thumb
-            tooltip.style.top = `${sliderRect.top - 40}px`; // Position above slider
-          });
-
-          document.addEventListener("mousemove", function (event) {
-            let sliderRect = slider.getBoundingClientRect();
-            if (
-              event.clientX < sliderRect.left - 10 ||
-              event.clientX > sliderRect.right + 10 ||
-              event.clientY < sliderRect.top - 40 ||
-              event.clientY > sliderRect.bottom + 10
-            ) {
-              tooltip.style.display = "none";
-            }
-          });
-        });
-      });
-    </script>
   </head>
-  <body>
+   <body>
     <script src="../auth.js"></script>
     <header>
       <div class="header-title">
@@ -165,7 +107,6 @@
           <a href="../index.html">STUSSIST</a>
         </div>
       </div>
-      <input type="text" class="search-bar" placeholder="Search for food..." />
       <nav>
         <a href="../login.html" onclick="logout()">Logout</a>
         <img src="../user-icon.png" alt="User Icon" class="user-icon" />
@@ -177,19 +118,95 @@
       <a href="suggestfood.html">Suggest Food</a>
     </div>
     <main>
+      <h2>Quick Food Search</h2>
       <hr />
-      <h2>Food Information [Coming Soon]</h2>
-      <hr />
-      <br />
-      <form>
-        <label for="food-name">Enter Food Name:</label>
-        <input type="text" id="food-name" /><br />
-        <br />
-        <button type="submit" class="submit-btn" onclick="quicksearch()">
-          Get Info
-        </button>
+      <form id="quick-search-form">
+        <label for="food-name">Enter Food Items:</label><br />
+        <input type="text" id="food-name" placeholder="E.g. Paneer" required /><br /><br />
+        <button type="submit" class="submit-btn">Get Info</button>
       </form>
+      <div id="loading" style="display:none;margin-top: 20px;">Please wait...</div>
+      <div class="results" id="results" style="display:none;">
+        <h3>Nutrition Information</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Calories</th>
+              <th>Carbs (g)</th>
+              <th>Protein (g)</th>
+              <th>Fat (g)</th>
+              <th>Fiber (g)</th>
+              <th>Sugar (g)</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
     </main>
-    <script src="../script.js"></script>
+
+    <script>
+      // Auto-fill & auto-query from ?query=…
+      document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('query');
+        if (query) {
+          const input = document.getElementById('food-name');
+          input.value = query;
+          document.getElementById('quick-search-form').dispatchEvent(new Event('submit'));
+        }
+      });
+
+      async function quicksearch(event) {
+        event.preventDefault();
+        const query = document.getElementById('food-name').value.trim();
+        if (!query) return;
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('results').style.display = 'none';
+
+        try {
+          // ← Call your backend proxy instead of CalorieNinjas directly
+          const res = await fetch(`/api/nutrition?q=${encodeURIComponent(query)}`);
+          if (!res.ok) throw new Error(`Status ${res.status}`);
+          const data = await res.json();
+          renderResults(data.items);
+        } catch (err) {
+          console.error('Fetch error:', err);
+          alert('Failed to fetch data. Please try again.');
+        } finally {
+          document.getElementById('loading').style.display = 'none';
+        }
+      }
+
+      function renderResults(items) {
+        const container = document.getElementById('results');
+        const tbody = document.getElementById('results-body');
+        tbody.innerHTML = '';
+
+        if (!items || items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7">No data found.</td></tr>';
+        } else {
+          items.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${item.name}</td>
+              <td>${item.calories}</td>
+              <td>${item.carbohydrates_total_g}</td>
+              <td>${item.protein_g}</td>
+              <td>${item.fat_total_g}</td>
+              <td>${item.fiber_g}</td>
+              <td>${item.sugar_g}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+
+        container.style.display = 'block';
+      }
+
+      document.getElementById('quick-search-form')
+        .addEventListener('submit', quicksearch);
+    </script>
   </body>
 </html>
