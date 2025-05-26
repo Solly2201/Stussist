@@ -98,7 +98,7 @@
       }
     </style>
   </head>
-   <body>
+  <body>
     <script src="../auth.js"></script>
     <header>
       <div class="header-title">
@@ -120,6 +120,7 @@
     <main>
       <h2>Quick Food Search</h2>
       <hr />
+
       <form id="quick-search-form">
         <label for="food-name">Enter Food Items:</label><br />
         <input type="text" id="food-name" placeholder="E.g. Paneer" required /><br /><br />
@@ -146,17 +147,17 @@
     </main>
 
     <script>
-      // Auto-fill & auto-query from ?query=…
       document.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('query');
-        if (query) {
-          const input = document.getElementById('food-name');
-          input.value = query;
-          document.getElementById('quick-search-form').dispatchEvent(new Event('submit'));
-        }
-      });
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('query');
 
+    if (query) {
+      const input = document.getElementById('food-name');
+      input.value = query;
+      // Simulate form submission to auto-fetch results
+      document.getElementById('quick-search-form').dispatchEvent(new Event('submit'));
+    }
+  });
       async function quicksearch(event) {
         event.preventDefault();
         const query = document.getElementById('food-name').value.trim();
@@ -164,15 +165,21 @@
 
         document.getElementById('loading').style.display = 'block';
         document.getElementById('results').style.display = 'none';
+        const apiKey = ''; 
+        const url = `https://api.calorieninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
 
         try {
-          // ← Call your backend proxy instead of CalorieNinjas directly
-          const res = await fetch(`/api/nutrition?q=${encodeURIComponent(query)}`);
-          if (!res.ok) throw new Error(`Status ${res.status}`);
-          const data = await res.json();
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'X-Api-Key': apiKey }
+          });
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+          }
+          const data = await response.json();
           renderResults(data.items);
         } catch (err) {
-          console.error('Fetch error:', err);
+          console.error('Error fetching nutrition data:', err);
           alert('Failed to fetch data. Please try again.');
         } finally {
           document.getElementById('loading').style.display = 'none';
@@ -205,8 +212,7 @@
         container.style.display = 'block';
       }
 
-      document.getElementById('quick-search-form')
-        .addEventListener('submit', quicksearch);
+      document.getElementById('quick-search-form').addEventListener('submit', quicksearch);
     </script>
   </body>
 </html>
