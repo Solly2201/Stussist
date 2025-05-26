@@ -74,18 +74,18 @@
         outline: none;
       }
       .record-container {
-        margin-top: 40px;
+        margin-top: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
       }
       .record-stats {
-        margin: 20px 0;
+        margin: 10px 0;
         font-size: 18px;
         white-space: pre-line;
       }
       .record-controls {
-        margin: 20px 0;
+        margin: 10px 0;
       }
       .record-controls button {
         padding: 10px 20px;
@@ -95,13 +95,14 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
+        margin: 5px;
       }
       .record-controls button:hover {
         background: #1fa5a0;
       }
       #attendanceChart {
         max-width: 400px;
-        margin-top: 30px;
+        margin-top: 10px;
       }
 
       #toast {
@@ -163,7 +164,7 @@
     <script>
       // Retrieve currentUser using userId; initialize subjectName as empty.
       const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {
-        userId: "admin",
+        username: "admin",
       };
       const userId = currentUser.username;
       let subjectName = "";
@@ -250,21 +251,24 @@
       function fetchAttendance() {
         if (!subjectName) return;
         fetch(
-          `http://localhost:3000/getAttendance?userId=${userId}&subjectName=${subjectName}`
+          `http://localhost:3000/getAttendance?userId=${userId}&subjectName=${encodeURIComponent(
+            subjectName
+          )}`
         )
           .then((res) => res.json())
           .then((data) => {
             if (data.success) {
-              const totalLectures = data.totalLectures;
-              const attendedLectures = data.attendedLectures;
+              // Use data.total and data.attended
+              const totalLectures = data.total;
+              const attendedLectures = data.attended;
               const absent = totalLectures - attendedLectures;
               document.getElementById(
                 "recordStats"
               ).innerText = `Total Lectures: ${totalLectures}\n\nAttended: ${attendedLectures} / Absent: ${absent}`;
               updateChart(attendedLectures, absent);
-              const perc = ((attendedLectures / totalLectures) * 100).toFixed(
-                2
-              );
+              const perc = totalLectures
+                ? ((attendedLectures / totalLectures) * 100).toFixed(2)
+                : "0.00";
               document.getElementById(
                 "recordtotal"
               ).innerText = `Attendance Percentage: ${perc}%`;
@@ -305,10 +309,37 @@
           });
       }
 
+      // Subtract attendance if added by mistake.
+      function subtractAttendance(attended) {
+        if (!subjectName) {
+          showToast("Please select a subject first.");
+          return;
+        }
+        fetch("http://localhost:3000/subtractAttendance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, subjectName, attended }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              fetchAttendance();
+            } else {
+              showToast("Error: " + data.error);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            showToast("Server error.");
+          });
+      }
+
       let attendanceChart;
       // Update (or create) the attendance chart.
       function updateChart(attended, missed) {
-        const ctx = document.getElementById("attendanceChart").getContext("2d");
+        const ctx = document
+          .getElementById("attendanceChart")
+          .getContext("2d");
         if (attendanceChart) {
           attendanceChart.data.datasets[0].data = [attended, missed];
           attendanceChart.update();
@@ -418,15 +449,15 @@
         <option value="" disabled selected>Select Subject</option>
       </select>
       <div class="record-container">
+        <div class="record-stats" id="recordtotal"></div>
+        <canvas id="attendanceChart"></canvas>
         <div class="record-stats" id="recordStats">Loading attendance...</div>
         <div class="record-controls">
           <button onclick="addLecture(true)">+ Present</button>
-          <button onclick="addLecture(false)" style="margin-left: 20px">
-            + Absent
-          </button>
+          <button style = "background: rgb(225, 4, 4);" onclick="subtractAttendance(true)">− Present</button>
+          <button onclick="addLecture(false)">+ Absent</button>
+          <button style = "background: rgb(225, 4, 4);" onclick="subtractAttendance(false)">− Absent</button>
         </div>
-        <canvas id="attendanceChart"></canvas>
-        <div class="record-stats" id="recordtotal"></div>
       </div>
     </main>
 
