@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>Transactions</title>
     <link rel="stylesheet" href="../styles.css" />
     <style>
@@ -82,11 +85,31 @@
       }
     </style>
     <script>
-      // Load transactions
+      // 1) Ensure we have a userId in localStorage (default to "admin")
+      const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+      let userId;
+      if (storedUser && storedUser.username) {
+        userId = storedUser.username;
+      } else {
+        userId = "admin";
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify({ username: "admin" })
+        );
+        console.warn("No currentUser found; defaulting to admin");
+      }
+
+      // 2) Load transactions for this user
       function loadTransactions() {
-        fetch("http://localhost:3000/api/transactions")
+        console.log("→ loadTransactions() called; userId =", userId);
+        fetch(
+          `http://localhost:3000/api/expenses?userId=${encodeURIComponent(
+            userId
+          )}`
+        )
           .then((response) => response.json())
           .then((transactions) => {
+            console.log("← /api/expenses returned:", transactions);
             const tbody = document.getElementById("transactionsBody");
             tbody.innerHTML = "";
             transactions.forEach((item) => {
@@ -97,36 +120,48 @@
                 <td>${item.id}</td>
                 <td>${item.description}</td>
                 <td>${item.amount}</td>
-                <td>${item.category}</td>
+                <td>${item.category || ""}</td>
                 <td>${formattedDate}</td>
                 <td>
-                  <button class="action-btn" onclick="deleteTransaction(${item.id})">Delete</button>
+                  <button class="action-btn" onclick="deleteTransaction(${
+                    item.id
+                  })">Delete</button>
                 </td>
               `;
               tbody.appendChild(row);
             });
           })
-          .catch((error) =>
-            console.error("Error loading transactions:", error)
-          );
+          .catch((error) => {
+            console.error("❌ loadTransactions error:", error);
+            alert("Failed to load transactions.");
+          });
       }
 
-      // deleting
+      // Delete a transaction for this user
       async function deleteTransaction(id) {
         if (!confirm("Are you sure you want to delete this expense?")) return;
+        console.log(
+          "→ DELETE /api/expenses?userId=" + userId + "&expenseId=" + id
+        );
         try {
           const response = await fetch(
-            "http://localhost:3000/api/transactions/" + id,
+            `http://localhost:3000/api/expenses?userId=${encodeURIComponent(
+              userId
+            )}&expenseId=${id}`,
             { method: "DELETE" }
           );
+          const data = await response.json();
+          console.log("← DELETE /api/expenses response:", data);
           if (response.ok) {
             alert("Expense deleted successfully.");
             loadTransactions();
           } else {
-            alert("Failed to delete expense.");
+            alert(
+              "Failed to delete expense: " + (data.error || "Unknown error")
+            );
           }
         } catch (error) {
-          console.error("Error deleting transaction:", error);
+          console.error("❌ deleteTransaction error:", error);
           alert("Error deleting expense.");
         }
       }
@@ -134,24 +169,33 @@
       window.onload = loadTransactions;
     </script>
   </head>
+
   <body>
     <script src="../auth.js"></script>
     <header>
       <div class="header-title">
         <div class="sub-title">EXPENSE MANAGEMENT</div>
-        <div class="logo"><a href="../index.html">STUSSIST</a></div>
+        <div class="logo">
+          <a href="../index.html">STUSSIST</a>
+        </div>
       </div>
       <nav>
         <a href="../login.html" onclick="logout()">Logout</a>
-        <img src="../user-icon.png" alt="User Icon" class="user-icon" />
+        <img
+          src="../user-icon.png"
+          alt="User Icon"
+          class="user-icon"
+        />
       </nav>
     </header>
+
     <div class="second-bar">
       <a href="expensehome.html">HOME</a>
       <a href="addexpense.html">ADD EXPENSE</a>
       <a href="transactions.html">TRANSACTIONS</a>
       <a href="settings.html">SETTINGS</a>
     </div>
+
     <main>
       <h2>Transaction History</h2>
       <hr />
