@@ -1,3 +1,4 @@
+<!-- suggestfood.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -41,7 +42,6 @@
       .second-bar a:hover {
         text-decoration: underline;
       }
-
       label,
       .slider,
       .dropdown {
@@ -59,7 +59,8 @@
         margin-top: 15px;
       }
       .slider {
-        width: 20%;
+        width: 80%;
+        max-width: 300px;
       }
       .slider::-webkit-slider-thumb {
         -webkit-appearance: none;
@@ -122,108 +123,74 @@
     </style>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // Setup tooltips for sliders
-        const sliders = document.querySelectorAll(".slider");
-        sliders.forEach((slider) => {
-          let tooltip = document.createElement("span");
-          tooltip.classList.add("tooltip");
-          document.body.appendChild(tooltip);
-          slider.addEventListener("input", function () {
-            let rect = this.getBoundingClientRect();
-            let thumbX =
-              rect.left +
-              ((this.value - this.min) / (this.max - this.min)) * rect.width -
-              10;
-            tooltip.textContent = this.value;
-            tooltip.style.display = "block";
-            tooltip.style.left = `${thumbX}px`;
-            tooltip.style.top = `${rect.top - 30}px`;
-          });
-          document.addEventListener("mousemove", function (e) {
-            let rect = slider.getBoundingClientRect();
-            if (
-              e.clientX < rect.left - 10 ||
-              e.clientX > rect.right + 10 ||
-              e.clientY < rect.top - 40 ||
-              e.clientY > rect.bottom + 10
-            ) {
-              tooltip.style.display = "none";
-            }
-          });
-        });
+        // Reset form on load
+        const form = document.querySelector("form");
+        form.reset();
 
-        // Live update slider labels
-        const calMin = document.getElementById("calories-min");
-        const calMax = document.getElementById("calories-max");
-        const budMin = document.getElementById("budget-min");
-        const budMax = document.getElementById("budget-max");
+        // Cache sliders and labels
+        const sliders = Array.from(document.querySelectorAll(".slider"));
         const calMinLabel = document.getElementById("cal-min-label");
         const calMaxLabel = document.getElementById("cal-max-label");
         const budMinLabel = document.getElementById("bud-min-label");
         const budMaxLabel = document.getElementById("bud-max-label");
 
+        // Tooltip logic: one tooltip per slider
+        sliders.forEach(slider => {
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip";
+          document.body.appendChild(tooltip);
+
+          slider.addEventListener("input", () => {
+            const rect = slider.getBoundingClientRect();
+            const ratio = (slider.value - slider.min) / (slider.max - slider.min);
+            const thumbX = rect.left + ratio * rect.width;
+            tooltip.textContent = slider.value;
+            tooltip.style.left = `${thumbX}px`;
+            tooltip.style.top = `${rect.top - 30}px`;
+            tooltip.style.display = "block";
+          });
+
+          slider.addEventListener("mouseover", () => {
+            // show initial on hover
+            slider.dispatchEvent(new Event("input"));
+          });
+
+          slider.addEventListener("mouseout", () => {
+            tooltip.style.display = "none";
+          });
+        });
+
+        // Live update labels
         function updateLabels() {
-          calMinLabel.textContent = calMin.value;
-          calMaxLabel.textContent = calMax.value;
-          budMinLabel.textContent = budMin.value;
-          budMaxLabel.textContent = budMax.value;
+          calMinLabel.textContent = document.getElementById("calories-min").value;
+          calMaxLabel.textContent = document.getElementById("calories-max").value;
+          budMinLabel.textContent = document.getElementById("budget-min").value;
+          budMaxLabel.textContent = document.getElementById("budget-max").value;
         }
-        calMin.addEventListener("input", updateLabels);
-        calMax.addEventListener("input", updateLabels);
-        budMin.addEventListener("input", updateLabels);
-        budMax.addEventListener("input", updateLabels);
+        sliders.forEach(s => s.addEventListener("input", updateLabels));
         updateLabels();
 
         // Form submission
-        const form = document.querySelector("form");
-        form.addEventListener("submit", async function (e) {
+        form.addEventListener("submit", e => {
           e.preventDefault();
-          const calorieMin = parseInt(
-            document.getElementById("calories-min").value
-          );
-          const calorieMax = parseInt(
-            document.getElementById("calories-max").value
-          );
-          const budgetMin = parseInt(
-            document.getElementById("budget-min").value
-          );
-          const budgetMax = parseInt(
-            document.getElementById("budget-max").value
-          );
+          const calorieMin = +document.getElementById("calories-min").value;
+          const calorieMax = +document.getElementById("calories-max").value;
+          const budgetMin = +document.getElementById("budget-min").value;
+          const budgetMax = +document.getElementById("budget-max").value;
           const cuisine = document.getElementById("cuisine").value;
-          console.log("Sending form values:", {
-            calorieMin,
-            calorieMax,
-            budgetMin,
-            budgetMax,
-            cuisine,
-          });
-          if (cuisine === "#" || !cuisine) {
+
+          if (!cuisine) {
             alert("Please select a category.");
             return;
           }
-          try {
-            const res = await fetch("http://localhost:3000/suggestFood", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                calorieMin,
-                calorieMax,
-                budgetMin,
-                budgetMax,
-                cuisine,
-              }),
-            });
-            console.log("Response status:", res.status);
-            const jsonData = await res.json();
-            console.log("Response JSON:", jsonData);
-            //sending the data to local storage to store
-            localStorage.setItem("recommendedFood", JSON.stringify(jsonData));
-            window.location.href = "./foodrecommendation.html";
-          } catch (error) {
-            alert("Something went wrong!");
-            console.error("Fetch error:", error);
+          if (calorieMin > calorieMax || budgetMin > budgetMax) {
+            alert("Ensure that minimum values are less than or equal to maximum values.");
+            return;
           }
+
+          const requestData = { calorieMin, calorieMax, budgetMin, budgetMax, cuisine };
+          localStorage.setItem("foodQuery", JSON.stringify(requestData));
+          window.location.href = "foodrecommendation.html";
         });
       });
     </script>
@@ -233,9 +200,7 @@
     <header>
       <div class="header-title">
         <div class="sub-title">FOOD MANAGEMENT</div>
-        <div class="logo">
-          <a href="../index.html">STUSSIST</a>
-        </div>
+        <div class="logo"><a href="../index.html">STUSSIST</a></div>
       </div>
       <nav>
         <a href="../login.html" onclick="logout()">Logout</a>
@@ -254,7 +219,7 @@
         <label style="text-decoration: underline">Calories</label>
         <div class="slider-block">
           <div class="slider-label">
-            <span>Min: <span id="cal-min-label">100</span> kcal</span>
+            <span>Min: <span id="cal-min-label" aria-live="polite">100</span> kcal</span>
           </div>
           <input
             type="range"
@@ -263,10 +228,10 @@
             min="40"
             max="550"
             step="10"
-            value="100"
+            aria-label="Minimum calories"
           />
           <div class="slider-label">
-            <span>Max: <span id="cal-max-label">300</span> kcal</span>
+            <span>Max: <span id="cal-max-label" aria-live="polite">300</span> kcal</span>
           </div>
           <input
             type="range"
@@ -275,13 +240,14 @@
             min="40"
             max="550"
             step="10"
-            value="300"
+            aria-label="Maximum calories"
           />
         </div>
+
         <label style="text-decoration: underline">Budget</label>
         <div class="slider-block">
           <div class="slider-label">
-            <span>Min: ₹<span id="bud-min-label">0</span></span>
+            <span>Min: ₹<span id="bud-min-label" aria-live="polite">0</span></span>
           </div>
           <input
             type="range"
@@ -290,10 +256,10 @@
             min="0"
             max="150"
             step="10"
-            value="0"
+            aria-label="Minimum budget"
           />
           <div class="slider-label">
-            <span>Max: ₹<span id="bud-max-label">100</span></span>
+            <span>Max: ₹<span id="bud-max-label" aria-live="polite">100</span></span>
           </div>
           <input
             type="range"
@@ -302,34 +268,36 @@
             min="0"
             max="150"
             step="10"
-            value="100"
+            aria-label="Maximum budget"
           />
         </div>
-        <label for="cuisine" style="text-decoration: underline"
-          >Enter Food Category Preference</label
-        >
-        <select id="cuisine" class="dropdown">
-          <option value="#" selected disabled>Select Category</option>
-          <option value="Fresh Juice">Fresh Juice</option>
-          <option value="Pav Bhaji">Pav Bhaji</option>
-          <option value="Milk Shakes">Milk Shakes</option>
-          <option value="Rice, Noodles">Rice, Noodles</option>
-          <option value="Hot Beverages">Hot Beverages</option>
-          <option value="Street Food">Street Food</option>
-          <option value="Vegetable Dishes">Vegetable Dishes</option>
-          <option value="South Indian">South Indian</option>
-          <option value="Thali">Thali</option>
-          <option value="Snacks">Snacks</option>
-          <option value="Franky">Franky</option>
-          <option value="Sandwiches">Sandwiches</option>
-          <option value="Bread Basket">Bread Basket</option>
-          <option value="Chinese Dishes">Chinese Dishes</option>
-          <option value="Pulav and Biryani">Pulav and Biryani</option>
-          <option value="Salad and Raitas">Salad and Raitas</option>
-          <option value="Pasta">Pasta</option>
-          <option value="Soup">Soup</option>
-          <option value="Desserts">Desserts</option>
+
+        <label for="cuisine" style="text-decoration: underline">
+          Enter Food Category Preference
+        </label>
+        <select id="cuisine" class="dropdown" aria-required="true">
+          <option value="" selected disabled>Select Category</option>
+          <option>Fresh Juice</option>
+          <option>Pav Bhaji</option>
+          <option>Milk Shakes</option>
+          <option>Rice, Noodles</option>
+          <option>Hot Beverages</option>
+          <option>Street Food</option>
+          <option>Vegetable Dishes</option>
+          <option>South Indian</option>
+          <option>Thali</option>
+          <option>Snacks</option>
+          <option>Franky</option>
+          <option>Sandwiches</option>
+          <option>Bread Basket</option>
+          <option>Chinese Dishes</option>
+          <option>Pulav and Biryani</option>
+          <option>Salad and Raitas</option>
+          <option>Pasta</option>
+          <option>Soup</option>
+          <option>Desserts</option>
         </select>
+
         <div style="margin-top: 20px">
           <button type="submit" class="submit-btn">Submit</button>
         </div>
