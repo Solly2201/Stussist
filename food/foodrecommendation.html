@@ -1,3 +1,4 @@
+<!-- foodrecommendation.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -79,28 +80,64 @@
       }
     </style>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // Retrieve recommendation data from localStorage
-        const storedData = localStorage.getItem("recommendedFood");
-        const foodNameSpan = document.getElementById("foodname");
+      let lastHadSuggestion = false;
+
+      async function fetchSuggestion() {
+        const raw = localStorage.getItem("foodQuery");
         const detailsDiv = document.getElementById("details");
-        if (storedData) {
-          const recommendation = JSON.parse(storedData);
-          if (recommendation.success) {
-            foodNameSpan.textContent = recommendation.data.item_name;
-            detailsDiv.innerHTML = `<hr>
-              <p><strong>Price:</strong> ₹${recommendation.data.price}</p>
-              <p><strong>Category:</strong> ${recommendation.data.cuisine}</p>
-              <p><strong>Calories:</strong> ${recommendation.data.calories} kcal</p>
+        const nameSpan = document.getElementById("foodname");
+        lastHadSuggestion = false;
+
+        if (!raw) {
+          nameSpan.textContent = "";
+          detailsDiv.innerHTML = "<p>No data found.</p>";
+          return;
+        }
+
+        const requestData = JSON.parse(raw);
+
+        try {
+          const res = await fetch("http://localhost:3000/suggestFood", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData),
+          });
+          const rec = await res.json();
+
+          if (rec.success && rec.suggestion) {
+            lastHadSuggestion = true;
+            const item = rec.suggestion;
+            nameSpan.textContent = item.item_name;
+            detailsDiv.innerHTML = `
+              <hr>
+              <p><strong>Price:</strong> ₹${item.price}</p>
+              <p><strong>Category:</strong> ${item.cuisine}</p>
+              <p><strong>Calories:</strong> ${item.calories} kcal</p>
             `;
           } else {
-            foodNameSpan.textContent = "";
-            detailsDiv.textContent = recommendation.message || "";
+            nameSpan.textContent = "";
+            detailsDiv.innerHTML = `
+              <p>No recommendations available for the selection criteria.</p>
+            `;
           }
-        } else {
-          foodNameSpan.textContent = "No recommendation available.";
-          detailsDiv.textContent = "";
+        } catch (err) {
+          console.error(err);
+          nameSpan.textContent = "";
+          detailsDiv.innerHTML = "<p>Something went wrong. Please try again.</p>";
         }
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        fetchSuggestion();
+        document
+          .getElementById("try-again-btn")
+          .addEventListener("click", () => {
+            if (lastHadSuggestion) {
+              fetchSuggestion();
+            } else {
+              window.location.href = "suggestfood.html";
+            }
+          });
       });
     </script>
   </head>
@@ -126,20 +163,21 @@
     <main>
       <h2>Food Recommendation</h2>
       <hr />
-      <div class="recommendation">
-        <p><strong>Food Suggestion:</strong> <span id="foodname">[ ]</span></p>
+      <div class="recommendation" role="region" aria-live="polite">
+        <p>
+          <strong>Food Suggestion:</strong>
+          <span id="foodname" aria-live="polite"></span>
+        </p>
         <div id="details"></div>
-      </div>
-      <form>
         <button
-          type="button"
+          id="try-again-btn"
           class="back-btn"
-          onclick="window.location.href='./suggestfood.html'"
+          aria-label="Try again or go back to suggestions"
           style="margin-top: 20px"
         >
           Try Again
         </button>
-      </form>
+      </div>
     </main>
     <script src="../script.js"></script>
   </body>
